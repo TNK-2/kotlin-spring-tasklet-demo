@@ -1,0 +1,61 @@
+package com.example.taskletdemo
+
+import org.springframework.batch.core.Job
+import org.springframework.batch.core.JobExecutionListener
+import org.springframework.batch.core.Step
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
+import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
+import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.launch.support.RunIdIncrementer
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+
+@Configuration
+@EnableBatchProcessing
+class BatchConfigration(
+    private val readTasklet: ReadTasklet,
+    private val processTasklet: ProcessTasklet,
+    private val writeTasklet: WriteTasklet,
+    private val jobBuilderFactory: JobBuilderFactory,
+    private val stepBuilderFactory: StepBuilderFactory
+) {
+
+    @Bean
+    fun readStep(): Step {
+        return stepBuilderFactory["readStep"]
+                .tasklet(readTasklet)
+                .build()
+    }
+
+    @Bean
+    fun processStep(): Step {
+        return stepBuilderFactory["processStep"]
+                .tasklet(processTasklet)
+                .build()
+    }
+
+    @Bean
+    fun writeStep(): Step {
+        return stepBuilderFactory["writeStep"]
+                .tasklet(writeTasklet)
+                .build()
+    }
+
+    @Bean
+    @Throws(Exception::class)
+    fun job(readStep: Step, processStep: Step, writeStep: Step): Job {
+        return jobBuilderFactory["job"]
+                .incrementer(RunIdIncrementer())
+                .listener(listener())
+                .start(readStep)
+                .next(processStep)
+                .next(writeStep)
+                .build()
+    }
+
+    @Bean
+    fun listener(): JobExecutionListener {
+        return JobListner()
+    }
+}
