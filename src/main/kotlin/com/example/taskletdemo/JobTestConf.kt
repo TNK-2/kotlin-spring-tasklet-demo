@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @EnableBatchProcessing
-class TaskletsConfig(
+class JobTestConf(
     private val readTasklet: ReadTasklet,
     private val processTasklet: ProcessTasklet,
     private val writeTasklet: WriteTasklet,
@@ -44,13 +44,23 @@ class TaskletsConfig(
 
     @Bean
     @Throws(Exception::class)
-    fun job(readStep: Step, processStep: Step, writeStep: Step): Job {
-        return jobBuilderFactory["job"]
+    fun jobTest1(readStep: Step, processStep: Step, writeStep: Step): Job {
+        return jobBuilderFactory["JobTest1"]
                 .incrementer(RunIdIncrementer())
                 .listener(listener())
                 .start(readStep)
                 .next(processStep)
                 .next(writeStep)
+                .build()
+    }
+
+    @Bean
+    @Throws(Exception::class)
+    fun jobTest2(readStep: Step, processStep: Step, writeStep: Step): Job {
+        return jobBuilderFactory["JobTest2"]
+                .incrementer(RunIdIncrementer())
+                .listener(listener())
+                .start(readStep)
                 .build()
     }
 
