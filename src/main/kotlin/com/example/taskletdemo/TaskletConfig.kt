@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @EnableBatchProcessing
-class BatchConfiguration(
+class TaskletsConfig(
     private val readTasklet: ReadTasklet,
     private val processTasklet: ProcessTasklet,
     private val writeTasklet: WriteTasklet,

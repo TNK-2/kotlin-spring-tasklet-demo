@@ -23,6 +23,8 @@ dependencies {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testImplementation("org.springframework.batch:spring-batch-test")
+	runtimeOnly("mysql:mysql-connector-java")
+	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
 }
 
 tasks.withType<Test> {
