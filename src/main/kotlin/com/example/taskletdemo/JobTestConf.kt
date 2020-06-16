@@ -1,11 +1,14 @@
 package com.example.taskletdemo
 
+import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobExecutionListener
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.job.builder.FlowBuilder
+import org.springframework.batch.core.job.flow.Flow
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -57,10 +60,32 @@ class JobTestConf(
     @Bean
     @Throws(Exception::class)
     fun jobTest2(readStep: Step, processStep: Step, writeStep: Step): Job {
+        // readStep -> OK -> processStep
+        //             NG -> writeStep
         return jobBuilderFactory["JobTest2"]
                 .incrementer(RunIdIncrementer())
                 .listener(listener())
-                .start(readStep)
+                .start(readStep).on(ExitStatus.COMPLETED.exitCode).to(processStep)
+                .from(readStep).on(ExitStatus.FAILED.exitCode).to(writeStep)
+                .end()
+                .build()
+    }
+
+    @Bean
+    @Throws(Exception::class)
+    fun jobTest3(readStep: Step, processStep: Step, writeStep: Step): Job {
+        // readStep -> OK -> processStep
+        //             NG -> writeStep
+        val readProcessFlow : Flow = FlowBuilder<Flow>("readProcessFlow")
+                .start(readStep).on(ExitStatus.COMPLETED.exitCode).to(processStep)
+                .from(readStep).on(ExitStatus.FAILED.exitCode).fail()
+                .build()
+
+        return jobBuilderFactory["JobTest3"]
+                .incrementer(RunIdIncrementer())
+                .start(readProcessFlow)
+                .next(writeStep)
+                .end()
                 .build()
     }
 
